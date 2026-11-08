@@ -51,9 +51,10 @@ git push                        # ⑤ 推到 GitHub
 额外流程：
 git pull     --从远程仓库拉取最新更新，并自动合并到本地仓库。
 git restore  --将仓库版本覆盖到工作区
-git fetch    --把远程最新情况拿回来，但不修改当前分支。
+git fetch    --把远程最新情况拿回来，但不修改当前分支,pull=fetch + merge，是否合并由用户决定。
 git merge    --把另一条开发线的成果合并进当前分支
 git reflog   --记录本地仓库 HEAD 和分支的操作历史，帮助恢复误操作或追踪历史状态。
+git commit --amend 修改最后一次提交时的说明
 
 作业流程：
 练习 1｜走一遍四区流转（10 分钟）
@@ -194,13 +195,60 @@ git reset --soft HEAD~n  将commit指针回退到n个版本前，期间提交的
 git reset --mixed（默认） HEAD~n  将commit指针回退到n个版本前，期间提交的文件离开暂存区，磁盘上的不动
 git reset --hard  HEAD~n  将commit指针回退到n个版本前，期间提交的文件会直接删除，磁盘上的也会消失
 
-如果已经push到远程仓库了怎么办？
-使用git revert
-
+怎么恢复在本地仓库撤销并删除的文件（未push）
 先使用git reflog去查看所有的提交记录，包括撤回的记录和移动到分支的记录
+再用：git reset --hard 版本号 重新回退到某个未删除的版本
 
-再用：git reset --hard 新增一个对应步骤的提交来替换掉撤回的这个改动，类似于生成个反向修改去替换原来的操作
-
-push 之前用 reset，push 之后用 revert。 如果你 push 了绝不能再用 reset进行修改
-
+如果已经push到远程仓库了怎么办？
+使用git revert HEAD ：新增一个对应步骤的提交来替换掉撤回的这个改动，类似于生成个反向修改去替换原来的操作，HEAD指撤销最近的一次修改
+git revert commit1..commit2：撤销commit1到commit2之间的改动。也是左闭右开
+*push 之前用 reset，push 之后用 revert。 如果你 push 了绝不能再用 reset进行修改
 另外：git switch -c 里的 -c 是 create（创建），git switch xx 是移动到某个分支，git switch -c xx 是生成新分支xx
+
+远程恢复也可能冲突，
+*revert 可能产生冲突，需要手动解决
+git revert commit_id
+*解决冲突后
+git add .
+git revert --continue
+*或者放弃 revert
+git revert --abort
+
+注：撤销是可以撤销某次撤销的结果的，即反反得正
+
+本地撤回
+git restore --->撤回本地的修改，会丢失暂存区的文件
+git restore --staged xx  -->撤销暂存区的xx文件
+
+
+统一格式：git commit -m 'type(scope): 描述(#issue)'
+init:初始化修改
+feat:新特性
+fix:本次提交解决了问题
+refactor:重新优化了代码
+docs:文档修改
+style:代码格式修改
+test:测试用修改
+build:构建项目
+chore：其他修改
+
+
+.gitignore是什么？用来让git忽略某些文件的文件夹，将需要忽略的文件填进.gitignore里面，git会自动忽略它
+
+什么是__pycache：源代码编译为字节码后，字节码缓存的文件，目的是提高编译效率
+什么是venv： python运行的独立虚拟环境，可以实现不同版本python软件之间互不干扰
+什么是env:配置文件，用来存储环境变量，（比如数据库，或者api这种不能公开的信息）
+什么是*.log :操作系统或程序使用的日志
+
+
+git diff:比较文件的不同，即比较文件在暂存区和工作区的差异
+
+git diff file :查看工作区与暂存区之间的不同
+
+git diff --cached/staged 查看上一次提交在本地仓库的与缓存区的不同
+
+git status告诉我们哪些文件改了
+git diff 告诉我们文件改了哪里
+
+git branch -d xx 删除某个分支 d指delete
+对比git switch -c xx c指创建
